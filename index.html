@@ -1,293 +1,1297 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recruitment System - Elite Team</title>
-    <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recruiter — Platform Rekrutmen Discord</title>
+  <meta name="description" content="Platform rekrutmen profesional untuk komunitas Discord." />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <!-- Firebase v9 compat -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <!-- Particles -->
-    <canvas id="particles"></canvas>
-    
-    <!-- Loading Screen -->
-    <div id="loader" class="loader">
-        <div class="loader-content">
-            <div class="loader-icon">
-                <i class="fas fa-users"></i>
-            </div>
-            <h2>Loading Elite System...</h2>
-        </div>
+
+<!-- ══════════════════════════════════════════
+     LOADING SCREEN
+══════════════════════════════════════════ -->
+<div id="loadingScreen" class="loading-screen">
+  <div class="ls-inner">
+    <div class="ls-logo">
+      <svg width="52" height="52" viewBox="0 0 52 52" fill="none">
+        <polygon points="26,2 50,14 50,38 26,50 2,38 2,14" stroke="#C9A84C" stroke-width="1.5" fill="none"/>
+        <polygon points="26,10 42,19 42,33 26,42 10,33 10,19" stroke="#C9A84C" stroke-width="0.75" fill="none" opacity="0.4"/>
+        <text x="26" y="30" text-anchor="middle" fill="#C9A84C" font-size="14" font-family="Rajdhani" font-weight="700" letter-spacing="1">RC</text>
+      </svg>
+    </div>
+    <div class="ls-name">RECRUITER</div>
+    <div class="ls-bar"><div class="ls-fill" id="lsFill"></div></div>
+    <div class="ls-status" id="lsStatus">Menghubungkan ke database...</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TOAST NOTIFICATIONS
+══════════════════════════════════════════ -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ══════════════════════════════════════════
+     MODAL OVERLAY
+══════════════════════════════════════════ -->
+<div id="modalOverlay" class="modal-overlay hidden"></div>
+
+<!-- ══════════════════════════════════════════
+     AUTH PAGE (Login / Register)
+══════════════════════════════════════════ -->
+<div id="authPage" class="page hidden">
+  <div class="auth-bg">
+    <div class="auth-grid-lines"></div>
+    <div class="auth-glow"></div>
+  </div>
+  <div class="auth-container">
+    <!-- Left panel -->
+    <div class="auth-left">
+      <div class="al-logo">
+        <svg width="48" height="48" viewBox="0 0 52 52" fill="none">
+          <polygon points="26,2 50,14 50,38 26,50 2,38 2,14" stroke="#C9A84C" stroke-width="1.5" fill="none"/>
+          <polygon points="26,10 42,19 42,33 26,42 10,33 10,19" stroke="#C9A84C" stroke-width="0.75" fill="none" opacity="0.4"/>
+          <text x="26" y="30" text-anchor="middle" fill="#C9A84C" font-size="14" font-family="Rajdhani" font-weight="700" letter-spacing="1">RC</text>
+        </svg>
+        <span>RECRUITER</span>
+      </div>
+      <h1 class="al-title">Platform<br /><em>Rekrutmen</em><br />Discord.</h1>
+      <p class="al-desc">Sistem rekrutmen profesional untuk komunitas Discord. Terstruktur, terverifikasi, dan transparan.</p>
+      <div class="al-stats">
+        <div class="als-item"><span class="als-num" id="statUsers">—</span><span class="als-label">Pengguna Terdaftar</span></div>
+        <div class="als-item"><span class="als-num" id="statRec">—</span><span class="als-label">Rekrutmen Aktif</span></div>
+        <div class="als-item"><span class="als-num" id="statApps">—</span><span class="als-label">Lamaran Masuk</span></div>
+      </div>
     </div>
 
-    <!-- Auth Modal -->
-    <div id="authModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>🔐 Admin Access</h3>
-                <button class="close-modal"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <input type="password" id="adminPass" placeholder="Masukkan Password Admin">
-                <button id="loginBtn" class="btn btn-primary">Masuk Dashboard</button>
-                <div class="demo-info">
-                    <small>Demo: <strong>admin123</strong></small>
-                </div>
-            </div>
+    <!-- Right panel: forms -->
+    <div class="auth-right">
+      <!-- Tab switcher -->
+      <div class="auth-tabs">
+        <button class="at-tab active" id="tabLogin" onclick="switchAuthTab('login')">MASUK</button>
+        <button class="at-tab" id="tabRegister" onclick="switchAuthTab('register')">DAFTAR</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div id="loginForm" class="auth-form">
+        <div class="af-header">
+          <h2>Selamat Datang Kembali</h2>
+          <p>Masuk ke akun Recruiter Anda</p>
         </div>
+        <div class="af-field">
+          <label>USERNAME</label>
+          <div class="af-input-wrap">
+            <span class="af-icon">◈</span>
+            <input type="text" id="loginUsername" placeholder="username_anda" autocomplete="username" />
+          </div>
+        </div>
+        <div class="af-field">
+          <label>PASSWORD</label>
+          <div class="af-input-wrap">
+            <span class="af-icon">◉</span>
+            <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+            <button class="af-toggle-pass" onclick="togglePass('loginPassword', this)">👁</button>
+          </div>
+        </div>
+        <button class="btn-primary full" onclick="handleLogin()">
+          <span class="btn-text">MASUK</span>
+          <span class="btn-icon">→</span>
+        </button>
+        <p class="af-note">Belum punya akun? <a onclick="switchAuthTab('register')">Daftar sekarang</a></p>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div id="registerForm" class="auth-form hidden">
+        <div class="af-header">
+          <h2>Buat Akun Baru</h2>
+          <p>Diperlukan kode undangan yang valid</p>
+        </div>
+        <div class="af-field">
+          <label>KODE UNDANGAN <span class="req">*</span></label>
+          <div class="af-input-wrap">
+            <span class="af-icon">🔑</span>
+            <input type="text" id="regInviteCode" placeholder="XXXX-XXXX-XXXX" autocomplete="off" oninput="this.value=this.value.toUpperCase()" />
+          </div>
+        </div>
+        <div class="af-field">
+          <label>USERNAME <span class="req">*</span></label>
+          <div class="af-input-wrap">
+            <span class="af-icon">◈</span>
+            <input type="text" id="regUsername" placeholder="username_unik (3-20 karakter)" autocomplete="username" />
+          </div>
+          <small class="af-hint">Huruf kecil, angka, underscore saja. Tidak bisa diubah.</small>
+        </div>
+        <div class="af-field">
+          <label>DISPLAY NAME <span class="req">*</span></label>
+          <div class="af-input-wrap">
+            <span class="af-icon">✦</span>
+            <input type="text" id="regDisplayName" placeholder="Nama tampilan Anda" />
+          </div>
+        </div>
+        <div class="af-field">
+          <label>DISCORD TAG <span class="req">*</span></label>
+          <div class="af-input-wrap">
+            <span class="af-icon">◆</span>
+            <input type="text" id="regDiscordTag" placeholder="username#0000 atau username baru" />
+          </div>
+        </div>
+        <div class="af-field">
+          <label>PASSWORD <span class="req">*</span></label>
+          <div class="af-input-wrap">
+            <span class="af-icon">◉</span>
+            <input type="password" id="regPassword" placeholder="Min. 8 karakter" />
+            <button class="af-toggle-pass" onclick="togglePass('regPassword', this)">👁</button>
+          </div>
+        </div>
+        <div class="af-field">
+          <label>KONFIRMASI PASSWORD <span class="req">*</span></label>
+          <div class="af-input-wrap">
+            <span class="af-icon">◉</span>
+            <input type="password" id="regPasswordConfirm" placeholder="Ulangi password" />
+          </div>
+        </div>
+        <div class="af-checkbox">
+          <input type="checkbox" id="regAgree" />
+          <label for="regAgree">Saya menyetujui syarat penggunaan platform ini</label>
+        </div>
+        <button class="btn-primary full" onclick="handleRegister()">
+          <span class="btn-text">DAFTAR SEKARANG</span>
+          <span class="btn-icon">→</span>
+        </button>
+        <p class="af-note">Sudah punya akun? <a onclick="switchAuthTab('login')">Masuk di sini</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MAIN APP (Logged In)
+══════════════════════════════════════════ -->
+<div id="mainApp" class="page hidden">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sb-logo">
+      <svg width="36" height="36" viewBox="0 0 52 52" fill="none">
+        <polygon points="26,2 50,14 50,38 26,50 2,38 2,14" stroke="#C9A84C" stroke-width="1.5" fill="none"/>
+        <text x="26" y="30" text-anchor="middle" fill="#C9A84C" font-size="13" font-family="Rajdhani" font-weight="700">RC</text>
+      </svg>
+      <span class="sb-brand">RECRUITER</span>
     </div>
 
-    <!-- Navbar -->
-    <nav class="navbar" id="navbar">
-        <div class="nav-container">
-            <div class="logo">
-                <i class="fas fa-shield-alt"></i>
-                <h3>Elite<span>Recruit</span></h3>
-            </div>
-            <ul class="nav-menu">
-                <li><a href="#home" class="nav-link active">Home</a></li>
-                <li><a href="#recruitments" class="nav-link">Recruitments</a></li>
-                <li><a href="#about" class="nav-link">About</a></li>
-                <li id="adminBtn" class="nav-link admin-only" style="display:none;">
-                    <i class="fas fa-tachometer-alt"></i> Dashboard
-                </li>
-                <li id="logoutBtn" class="nav-link" style="display:none;">
-                    <i class="fas fa-sign-out-alt"></i> Logout
-                </li>
-            </ul>
-        </div>
+    <!-- User info -->
+    <div class="sb-user" id="sbUser">
+      <div class="sb-avatar" id="sbAvatar">—</div>
+      <div class="sb-user-info">
+        <div class="sb-username" id="sbUsername">—</div>
+        <div class="sb-role" id="sbRole">—</div>
+      </div>
+      <div class="sb-notif-badge hidden" id="sbNotifBadge">0</div>
+    </div>
+
+    <!-- Nav for regular users -->
+    <nav class="sb-nav" id="navUser">
+      <div class="sb-nav-section">MENU</div>
+      <a class="sb-link active" data-page="home" onclick="navigateTo('home')">
+        <span class="sb-link-icon">⌂</span> Beranda
+      </a>
+      <a class="sb-link" data-page="recruitments" onclick="navigateTo('recruitments')">
+        <span class="sb-link-icon">◈</span> Rekrutmen Aktif
+        <span class="sb-badge hidden" id="badgeRec">0</span>
+      </a>
+      <a class="sb-link" data-page="myApplications" onclick="navigateTo('myApplications')">
+        <span class="sb-link-icon">◉</span> Lamaran Saya
+        <span class="sb-badge hidden" id="badgeMyApps">0</span>
+      </a>
+      <a class="sb-link" data-page="notifications" onclick="navigateTo('notifications')">
+        <span class="sb-link-icon">◆</span> Notifikasi
+        <span class="sb-badge hidden" id="badgeNotif">0</span>
+      </a>
+      <div class="sb-nav-section">AKUN</div>
+      <a class="sb-link" data-page="profile" onclick="navigateTo('profile')">
+        <span class="sb-link-icon">✦</span> Profil Saya
+      </a>
+      <a class="sb-link danger" onclick="handleLogout()">
+        <span class="sb-link-icon">⊗</span> Keluar
+      </a>
     </nav>
 
-    <!-- Main App -->
-    <div id="app">
-        <!-- Public Mode -->
-        <div id="publicMode">
-            <!-- Hero -->
-            <section id="home" class="hero">
-                <div class="hero-content">
-                    <div class="hero-text">
-                        <h1 class="hero-title">
-                            <span>Join</span> <span class="gradient-text">Elite</span><br>
-                            <span>Team</span>
-                        </h1>
-                        <p class="hero-subtitle">
-                            Lowongan terbaik untuk developer berbakat. 
-                            <span id="recruitmentCount">0</span> recruitment tersedia.
-                        </p>
-                        <div class="hero-buttons">
-                            <a href="#recruitments" class="btn btn-primary">Lihat Lowongan</a>
-                            <button id="adminAccessBtn" class="btn btn-secondary">
-                                <i class="fas fa-cog"></i> Admin Panel
-                            </button>
-                        </div>
-                    </div>
-                    <div class="hero-stats">
-                        <div class="stat-card">
-                            <h3 id="totalApps">0</h3>
-                            <span>Total Applications</span>
-                        </div>
-                        <div class="stat-card">
-                            <h3 id="activeRec">0</h3>
-                            <span>Active Recruitments</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
+    <!-- Nav for admins -->
+    <nav class="sb-nav hidden" id="navAdmin">
+      <div class="sb-nav-section">DASHBOARD ADMIN</div>
+      <a class="sb-link" data-page="adminOverview" onclick="navigateTo('adminOverview')">
+        <span class="sb-link-icon">◈</span> Overview
+      </a>
+      <a class="sb-link" data-page="adminRecruitments" onclick="navigateTo('adminRecruitments')">
+        <span class="sb-link-icon">◆</span> Kelola Rekrutmen
+        <span class="sb-badge hidden" id="badgeAdminRec">0</span>
+      </a>
+      <a class="sb-link" data-page="adminApplications" onclick="navigateTo('adminApplications')">
+        <span class="sb-link-icon">◉</span> Semua Lamaran
+        <span class="sb-badge hidden" id="badgeAdminApps">0</span>
+      </a>
+      <a class="sb-link" data-page="adminUsers" onclick="navigateTo('adminUsers')">
+        <span class="sb-link-icon">✦</span> Manajemen User
+      </a>
+      <a class="sb-link" data-page="adminInvites" onclick="navigateTo('adminInvites')">
+        <span class="sb-link-icon">⌘</span> Kode Undangan
+      </a>
+      <a class="sb-link" data-page="adminRoles" onclick="navigateTo('adminRoles')">
+        <span class="sb-link-icon">⊕</span> Manajemen Role
+      </a>
+      <a class="sb-link" data-page="adminServers" onclick="navigateTo('adminServers')">
+        <span class="sb-link-icon">◫</span> Server Discord
+      </a>
+      <a class="sb-link" data-page="adminAnalytics" onclick="navigateTo('adminAnalytics')">
+        <span class="sb-link-icon">▲</span> Analytics
+      </a>
+      <a class="sb-link" data-page="adminGC" onclick="navigateTo('adminGC')">
+        <span class="sb-link-icon">◧</span> Group Chat
+        <span class="sb-badge hidden" id="badgeGC">0</span>
+      </a>
+      <a class="sb-link" data-page="adminAuditLog" onclick="navigateTo('adminAuditLog')">
+        <span class="sb-link-icon">≡</span> Audit Log
+      </a>
+      <div class="sb-nav-section">PENGATURAN</div>
+      <a class="sb-link" data-page="adminSettings" onclick="navigateTo('adminSettings')">
+        <span class="sb-link-icon">⚙</span> Pengaturan Platform
+      </a>
+      <div class="sb-divider"></div>
+      <div class="sb-nav-section">AKUN SAYA</div>
+      <a class="sb-link" data-page="home" onclick="navigateTo('home')">
+        <span class="sb-link-icon">⌂</span> Beranda User
+      </a>
+      <a class="sb-link" data-page="profile" onclick="navigateTo('profile')">
+        <span class="sb-link-icon">✦</span> Profil Saya
+      </a>
+      <a class="sb-link danger" onclick="handleLogout()">
+        <span class="sb-link-icon">⊗</span> Keluar
+      </a>
+    </nav>
 
-            <!-- Recruitments -->
-            <section id="recruitments" class="recruitments">
-                <div class="container">
-                    <h2 class="section-title">Available Positions</h2>
-                    <div id="recruitmentList" class="recruitment-grid">
-                        <div class="empty-state">
-                            <i class="fas fa-briefcase"></i>
-                            <h3>Belum ada recruitment aktif</h3>
-                            <p>Stay tuned untuk lowongan terbaru!</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
+    <!-- Sidebar footer -->
+    <div class="sb-footer">
+      <span class="sb-version">v1.0.0</span>
+      <span class="sb-dot"></span>
+      <span class="sb-online">Online</span>
+    </div>
+  </aside>
 
-            <!-- About -->
-            <section id="about" class="about">
-                <div class="container">
-                    <h2 class="section-title">Why Join Us?</h2>
-                    <div class="about-grid">
-                        <div class="about-card">
-                            <i class="fas fa-rocket"></i>
-                            <h3>Fast Growth</h3>
-                            <p>Karir lightning fast dengan project-project keren</p>
-                        </div>
-                        <div class="about-card">
-                            <i class="fas fa-users"></i>
-                            <h3>Elite Team</h3>
-                            <p>Bekerja sama developer terbaik di Indonesia</p>
-                        </div>
-                        <div class="about-card">
-                            <i class="fas fa-award"></i>
-                            <h3>Competitive Salary</h3>
-                            <p>Gaji kompetitif + bonus performance</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
+  <!-- TOPBAR -->
+  <header class="topbar" id="topbar">
+    <button class="topbar-menu" onclick="toggleSidebar()" aria-label="Menu">☰</button>
+    <div class="topbar-title" id="topbarTitle">Beranda</div>
+    <div class="topbar-actions">
+      <button class="topbar-notif" onclick="navigateTo('notifications')" id="topbarNotif">
+        <span>◆</span>
+        <span class="tn-badge hidden" id="tnBadge">0</span>
+      </button>
+      <div class="topbar-avatar" id="topbarAvatar">—</div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="main-content" id="mainContent">
+
+    <!-- ── PAGE: HOME (User) ── -->
+    <div id="pageHome" class="content-page hidden">
+      <div class="page-hero">
+        <div class="ph-text">
+          <div class="ph-label">SELAMAT DATANG</div>
+          <h1 class="ph-title" id="homeGreeting">Halo, —</h1>
+          <p class="ph-sub">Temukan rekrutmen yang sesuai dengan keahlian dan minat Anda.</p>
         </div>
-
-        <!-- Admin Dashboard -->
-        <div id="adminMode" class="admin-mode" style="display:none;">
-            <!-- Dashboard Header -->
-            <header class="dashboard-header">
-                <div class="container">
-                    <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
-                    <div class="dashboard-stats">
-                        <div class="stat">
-                            <h3 id="adminTotalRec">0</h3>
-                            <span>Total Recruitments</span>
-                        </div>
-                        <div class="stat">
-                            <h3 id="adminActiveRec">0</h3>
-                            <span>Active</span>
-                        </div>
-                        <div class="stat">
-                            <h3 id="adminTotalApps">0</h3>
-                            <span>All Applications</span>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <!-- Dashboard Content -->
-            <div class="dashboard-content">
-                <!-- Create Recruitment -->
-                <section class="dashboard-section">
-                    <div class="section-header">
-                        <h2><i class="fas fa-plus-circle"></i> Create New Recruitment</h2>
-                        <button class="btn btn-primary" id="createRecBtn">
-                            <i class="fas fa-plus"></i> New Recruitment
-                        </button>
-                    </div>
-                    <div id="createForm" class="form-container" style="display:none;">
-                        <form id="recruitmentForm">
-                            <div class="form-group">
-                                <label>Position Name</label>
-                                <input type="text" id="posName" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Recruitment Type</label>
-                                <select id="recType" required>
-                                    <option value="">Pilih Tipe</option>
-                                    <option value="frontend">Frontend Developer</option>
-                                    <option value="backend">Backend Developer</option>
-                                    <option value="fullstack">Fullstack Developer</option>
-                                    <option value="uiux">UI/UX Designer</option>
-                                    <option value="mobile">Mobile Developer</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Description</label>
-                                <textarea id="description" rows="4" required></textarea>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Start Date</label>
-                                    <input type="date" id="startDate" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>End Date</label>
-                                    <input type="date" id="endDate" required>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Max Applicants</label>
-                                    <input type="number" id="maxApps" min="1" max="100" value="50">
-                                </div>
-                                <div class="form-group">
-                                    <label>Difficulty</label>
-                                    <select id="difficulty">
-                                        <option value="easy">Easy</option>
-                                        <option value="medium" selected>Medium</option>
-                                        <option value="hard">Hard</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">Create Recruitment</button>
-                                <button type="button" class="btn btn-secondary" id="cancelCreate">Cancel</button>
-                            </div>
-                        </form>
-                    </div>
-                </section>
-
-                <!-- Active Recruitments -->
-                <section class="dashboard-section">
-                    <h2><i class="fas fa-list"></i> Active Recruitments</h2>
-                    <div id="adminRecruitmentList" class="recruitment-grid"></div>
-                </section>
-
-                <!-- Applications -->
-                <section class="dashboard-section">
-                    <h2><i class="fas fa-file-alt"></i> All Applications</h2>
-                    <div class="tabs">
-                        <button class="tab-btn active" data-tab="pending">Pending <span id="pendingCount">0</span></button>
-                        <button class="tab-btn" data-tab="approved">Approved <span id="approvedCount">0</span></button>
-                        <button class="tab-btn" data-tab="rejected">Rejected <span id="rejectedCount">0</span></button>
-                    </div>
-                    <div id="applicationsList" class="applications-grid"></div>
-                </section>
-            </div>
+        <div class="ph-deco">
+          <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+            <polygon points="60,5 115,32 115,88 60,115 5,88 5,32" stroke="#C9A84C" stroke-width="1" fill="none" opacity="0.3"/>
+            <polygon points="60,20 100,40 100,80 60,100 20,80 20,40" stroke="#C9A84C" stroke-width="0.5" fill="none" opacity="0.2"/>
+            <circle cx="60" cy="60" r="15" stroke="#C9A84C" stroke-width="0.75" fill="none" opacity="0.4"/>
+          </svg>
         </div>
+      </div>
+
+      <!-- Quick stats -->
+      <div class="quick-stats" id="homeStats">
+        <div class="qs-card">
+          <div class="qs-icon">◈</div>
+          <div class="qs-info">
+            <span class="qs-num" id="qsActiveRec">0</span>
+            <span class="qs-label">Rekrutmen Aktif</span>
+          </div>
+        </div>
+        <div class="qs-card">
+          <div class="qs-icon">◉</div>
+          <div class="qs-info">
+            <span class="qs-num" id="qsMyApps">0</span>
+            <span class="qs-label">Lamaran Saya</span>
+          </div>
+        </div>
+        <div class="qs-card">
+          <div class="qs-icon">◆</div>
+          <div class="qs-info">
+            <span class="qs-num" id="qsNotifs">0</span>
+            <span class="qs-label">Notifikasi Baru</span>
+          </div>
+        </div>
+        <div class="qs-card">
+          <div class="qs-icon">✦</div>
+          <div class="qs-info">
+            <span class="qs-num" id="qsStatus">—</span>
+            <span class="qs-label">Status Akun</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active recruitments preview -->
+      <div class="section-block">
+        <div class="sb-header">
+          <h2>Rekrutmen Tersedia</h2>
+          <a onclick="navigateTo('recruitments')" class="sb-more">Lihat semua →</a>
+        </div>
+        <div id="homeRecList" class="rec-grid">
+          <!-- filled by JS -->
+        </div>
+      </div>
+
+      <!-- My latest applications -->
+      <div class="section-block">
+        <div class="sb-header">
+          <h2>Lamaran Terbaru Saya</h2>
+          <a onclick="navigateTo('myApplications')" class="sb-more">Lihat semua →</a>
+        </div>
+        <div id="homeAppList" class="apps-list">
+          <!-- filled by JS -->
+        </div>
+      </div>
     </div>
 
-    <!-- Recruitment Modal (Public) -->
-    <div id="recModal" class="modal">
-        <div class="modal-content large">
-            <div class="modal-header">
-                <h3 id="modalTitle"></h3>
-                <button class="close-modal"><i class="fas fa-times"></i></button>
-            </div>
-            <div class="modal-body">
-                <div id="recDetails"></div>
-                <form id="applyForm" class="apply-form">
-                    <div class="form-row">
-                        <div class="form-group">
-                            <input type="text" id="appName" placeholder="Full Name" required>
-                        </div>
-                        <div class="form-group">
-                            <input type="email" id="appEmail" placeholder="Email" required>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <input type="tel" id="appPhone" placeholder="Phone">
-                        </div>
-                        <div class="form-group">
-                            <input type="text" id="appDiscord" placeholder="Discord ID">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <textarea id="appWhy" placeholder="Why do you want to join us?" rows="4" required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <textarea id="appExp" placeholder="Your experiences & skills" rows="4" required></textarea>
-                    </div>
-                    <div class="form-group checkbox-group">
-                        <label>
-                            <input type="checkbox" id="agreeTerms" required>
-                            Saya setuju dengan syarat & ketentuan
-                        </label>
-                    </div>
-                    <button type="submit" class="btn btn-primary" id="submitApp">
-                        <span>Submit Application</span>
-                        <div class="loader-sm" style="display:none;"></div>
-                    </button>
-                </form>
-            </div>
-        </div>
+    <!-- ── PAGE: RECRUITMENTS LIST ── -->
+    <div id="pageRecruitments" class="content-page hidden">
+      <div class="cp-header">
+        <h1>Rekrutmen Aktif</h1>
+        <p>Semua rekrutmen yang sedang berjalan dan terbuka untuk pendaftar</p>
+      </div>
+      <div class="filter-bar">
+        <input type="text" id="recSearchInput" placeholder="Cari rekrutmen..." class="filter-search" oninput="filterRecruitments()" />
+        <select id="recFilterServer" class="filter-select" onchange="filterRecruitments()">
+          <option value="">Semua Server</option>
+        </select>
+        <select id="recFilterType" class="filter-select" onchange="filterRecruitments()">
+          <option value="">Semua Tipe</option>
+        </select>
+        <select id="recFilterStatus" class="filter-select" onchange="filterRecruitments()">
+          <option value="open">Terbuka</option>
+          <option value="all">Semua Status</option>
+          <option value="closed">Ditutup</option>
+        </select>
+      </div>
+      <div id="recListContainer" class="rec-grid large">
+        <!-- filled by JS -->
+      </div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- ── PAGE: MY APPLICATIONS ── -->
+    <div id="pageMyApplications" class="content-page hidden">
+      <div class="cp-header">
+        <h1>Lamaran Saya</h1>
+        <p>Pantau status semua lamaran yang telah Anda kirimkan</p>
+      </div>
+      <div id="myAppsContainer" class="apps-list detailed">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <!-- ── PAGE: NOTIFICATIONS ── -->
+    <div id="pageNotifications" class="content-page hidden">
+      <div class="cp-header">
+        <h1>Notifikasi</h1>
+        <div class="cp-actions">
+          <button class="btn-ghost sm" onclick="markAllRead()">Tandai semua dibaca</button>
+        </div>
+      </div>
+      <div id="notifList" class="notif-list">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <!-- ── PAGE: PROFILE ── -->
+    <div id="pageProfile" class="content-page hidden">
+      <div class="cp-header">
+        <h1>Profil Saya</h1>
+      </div>
+      <div class="profile-grid">
+        <div class="profile-card main-card">
+          <div class="profile-avatar-big" id="profileAvatarBig">—</div>
+          <div class="profile-name" id="profileDisplayName">—</div>
+          <div class="profile-username" id="profileUsernameDisp">@—</div>
+          <div class="profile-role-badge" id="profileRoleBadge">—</div>
+          <div class="profile-joined" id="profileJoined">Bergabung —</div>
+        </div>
+        <div class="profile-card info-card">
+          <h3>Informasi Akun</h3>
+          <div class="info-field">
+            <label>USERNAME</label>
+            <div class="info-val" id="piUsername">—</div>
+          </div>
+          <div class="info-field">
+            <label>DISPLAY NAME</label>
+            <div class="info-editable">
+              <input type="text" id="piDisplayNameInput" />
+              <button class="btn-ghost sm" onclick="saveDisplayName()">Simpan</button>
+            </div>
+          </div>
+          <div class="info-field">
+            <label>DISCORD TAG</label>
+            <div class="info-editable">
+              <input type="text" id="piDiscordInput" />
+              <button class="btn-ghost sm" onclick="saveDiscordTag()">Simpan</button>
+            </div>
+          </div>
+          <div class="info-field">
+            <label>BIO</label>
+            <div class="info-editable col">
+              <textarea id="piBioInput" rows="3" placeholder="Tulis bio singkat..."></textarea>
+              <button class="btn-ghost sm" onclick="saveBio()">Simpan Bio</button>
+            </div>
+          </div>
+          <div class="info-field">
+            <label>GANTI PASSWORD</label>
+            <div class="info-editable col">
+              <input type="password" id="piOldPass" placeholder="Password lama" />
+              <input type="password" id="piNewPass" placeholder="Password baru (min. 8 karakter)" />
+              <input type="password" id="piNewPassConfirm" placeholder="Konfirmasi password baru" />
+              <button class="btn-ghost sm" onclick="changePassword()">Update Password</button>
+            </div>
+          </div>
+        </div>
+        <div class="profile-card stats-card">
+          <h3>Statistik</h3>
+          <div class="stat-row"><span>Total Lamaran</span><span id="psTotalApps">0</span></div>
+          <div class="stat-row"><span>Diterima</span><span id="psAccepted" class="gold">0</span></div>
+          <div class="stat-row"><span>Ditolak</span><span id="psRejected" class="red">0</span></div>
+          <div class="stat-row"><span>Menunggu</span><span id="psPending" class="muted">0</span></div>
+          <div class="stat-row"><span>Role Saat Ini</span><span id="psRole" class="gold">—</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         ADMIN PAGES
+    ══════════════════════════════════════════ -->
+
+    <!-- ── ADMIN: OVERVIEW ── -->
+    <div id="pageAdminOverview" class="content-page hidden">
+      <div class="cp-header admin-header">
+        <h1>Dashboard Admin</h1>
+        <div class="admin-time" id="adminTime">—</div>
+      </div>
+      <div class="admin-stats-grid" id="adminStatsGrid">
+        <!-- filled by JS -->
+      </div>
+      <div class="admin-grid-2">
+        <div class="admin-card">
+          <div class="ac-header"><h3>Rekrutmen Terbaru</h3><a onclick="navigateTo('adminRecruitments')">Lihat semua</a></div>
+          <div id="overviewRecentRec" class="ac-list"></div>
+        </div>
+        <div class="admin-card">
+          <div class="ac-header"><h3>Lamaran Terbaru</h3><a onclick="navigateTo('adminApplications')">Lihat semua</a></div>
+          <div id="overviewRecentApps" class="ac-list"></div>
+        </div>
+        <div class="admin-card">
+          <div class="ac-header"><h3>User Terbaru</h3><a onclick="navigateTo('adminUsers')">Lihat semua</a></div>
+          <div id="overviewRecentUsers" class="ac-list"></div>
+        </div>
+        <div class="admin-card">
+          <div class="ac-header"><h3>Aktivitas Terkini</h3></div>
+          <div id="overviewActivity" class="ac-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ADMIN: RECRUITMENTS ── -->
+    <div id="pageAdminRecruitments" class="content-page hidden">
+      <div class="cp-header">
+        <h1>Kelola Rekrutmen</h1>
+        <button class="btn-primary" onclick="openHostRecruitmentModal()">
+          <span>+ HOST REKRUTMEN</span>
+        </button>
+      </div>
+      <div class="admin-filter-bar">
+        <input type="text" id="adminRecSearch" placeholder="Cari rekrutmen..." class="filter-search" oninput="filterAdminRec()" />
+        <select id="adminRecStatusFilter" class="filter-select" onchange="filterAdminRec()">
+          <option value="">Semua Status</option>
+          <option value="draft">Draft</option>
+          <option value="open">Aktif / Open</option>
+          <option value="closed">Ditutup</option>
+          <option value="archived">Diarsipkan</option>
+        </select>
+        <select id="adminRecServerFilter" class="filter-select" onchange="filterAdminRec()">
+          <option value="">Semua Server</option>
+        </select>
+      </div>
+      <div id="adminRecTable" class="data-table-wrap">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <!-- ── ADMIN: APPLICATIONS ── -->
+    <div id="pageAdminApplications" class="content-page hidden">
+      <div class="cp-header">
+        <h1>Semua Lamaran</h1>
+      </div>
+      <div class="admin-filter-bar">
+        <input type="text" id="adminAppSearch" placeholder="Cari pelamar, rekrutmen..." class="filter-search" oninput="filterAdminApps()" />
+        <select id="adminAppStatusFilter" class="filter-select" onchange="filterAdminApps()">
+          <option value="">Semua Status</option>
+          <option value="pending">Menunggu</option>
+          <option value="reviewing">Sedang Direview</option>
+          <option value="interview">Interview</option>
+          <option value="accepted">Diterima</option>
+          <option value="rejected">Ditolak</option>
+        </select>
+        <select id="adminAppRecFilter" class="filter-select" onchange="filterAdminApps()">
+          <option value="">Semua Rekrutmen</option>
+        </select>
+      </div>
+      <div id="adminAppTable" class="data-table-wrap">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <!-- ── ADMIN: USERS ── -->
+    <div id="pageAdminUsers" class="content-page hidden">
+      <div class="cp-header">
+        <h1>Manajemen User</h1>
+      </div>
+      <div class="admin-filter-bar">
+        <input type="text" id="adminUserSearch" placeholder="Cari username, display name..." class="filter-search" oninput="filterAdminUsers()" />
+        <select id="adminUserRoleFilter" class="filter-select" onchange="filterAdminUsers()">
+          <option value="">Semua Role</option>
+        </select>
+        <select id="adminUserStatusFilter" class="filter-select" onchange="filterAdminUsers()">
+          <option value="">Semua Status</option>
+          <option value="active">Aktif</option>
+          <option value="suspended">Disuspend</option>
+          <option value="banned">Dibanned</option>
+        </select>
+      </div>
+      <div id="adminUserTable" class="data-table-wrap">
+        <!-- filled by JS -->
+      </div>
+    </div>
+
+    <!-- ── ADMIN: INVITE CODES ── -->
+    <div id="pageAdminInvites" class="content-page hidden">
+      <div class="cp-header">
+        <h1>Kode Undangan</h1>
+        <button class="btn-primary" onclick="openGenerateInviteModal()">+ GENERATE KODE</button>
+      </div>
+      <div class="admin-filter-bar">
+        <input type="text" id="inviteSearch" placeholder="Cari kode..." class="filter-search" oninput="filterInvites()" />
+        <select id="inviteStatusFilter" class="filter-select" onchange="filterInvites()">
+          <option value="">Semua Status</option>
+          <option value="active">Aktif</option>
+          <option value="used">Sudah Dipakai</option>
+          <option value="expired">Kadaluarsa</option>
+          <option value="revoked">Dicabut</option>
+        </select>
+      </div>
+      <div id="inviteTable" class="data-table-wrap"></div>
+    </div>
+
+    <!-- ── ADMIN: ROLES ── -->
+    <div id="pageAdminRoles" class="content-page hidden">
+      <div class="cp-header">
+        <h1>Manajemen Role</h1>
+        <button class="btn-primary" onclick="openCreateRoleModal()">+ BUAT ROLE BARU</button>
+      </div>
+      <div id="roleList" class="role-grid"></div>
+    </div>
+
+    <!-- ── ADMIN: SERVERS ── -->
+    <div id="pageAdminServers" class="content-page hidden">
+      <div class="cp-header">
+        <h1>Server Discord</h1>
+        <button class="btn-primary" onclick="openAddServerModal()">+ TAMBAH SERVER</button>
+      </div>
+      <div id="serverList" class="server-grid"></div>
+    </div>
+
+    <!-- ── ADMIN: ANALYTICS ── -->
+    <div id="pageAdminAnalytics" class="content-page hidden">
+      <div class="cp-header">
+        <h1>Analytics</h1>
+      </div>
+      <div class="analytics-grid">
+        <div class="analytics-card full">
+          <h3>Rekrutmen per Bulan</h3>
+          <div id="chartRecruitments" class="chart-area"></div>
+        </div>
+        <div class="analytics-card">
+          <h3>Status Lamaran</h3>
+          <div id="chartApplicationStatus" class="chart-area pie"></div>
+        </div>
+        <div class="analytics-card">
+          <h3>Pertumbuhan User</h3>
+          <div id="chartUsers" class="chart-area"></div>
+        </div>
+        <div class="analytics-card full">
+          <h3>Rekrutmen Paling Aktif</h3>
+          <div id="topRecTable" class="ac-list"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ADMIN: GROUP CHAT ── -->
+    <div id="pageAdminGC" class="content-page hidden">
+      <div class="cp-header">
+        <h1>Group Chat</h1>
+        <button class="btn-primary" onclick="openCreateGCModal()">+ BUAT GC BARU</button>
+      </div>
+      <div class="gc-layout">
+        <div class="gc-sidebar">
+          <div id="gcList" class="gc-list"></div>
+        </div>
+        <div class="gc-main" id="gcMain">
+          <div class="gc-empty">
+            <div class="gc-empty-icon">◧</div>
+            <p>Pilih group chat untuk mulai</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ADMIN: AUDIT LOG ── -->
+    <div id="pageAdminAuditLog" class="content-page hidden">
+      <div class="cp-header">
+        <h1>Audit Log</h1>
+        <button class="btn-ghost" onclick="exportAuditLog()">↓ Export CSV</button>
+      </div>
+      <div class="admin-filter-bar">
+        <input type="text" id="auditSearch" placeholder="Cari aksi, user..." class="filter-search" oninput="filterAuditLog()" />
+        <select id="auditActionFilter" class="filter-select" onchange="filterAuditLog()">
+          <option value="">Semua Aksi</option>
+          <option value="login">Login</option>
+          <option value="register">Register</option>
+          <option value="recruitment">Recruitment</option>
+          <option value="application">Application</option>
+          <option value="admin">Admin Action</option>
+        </select>
+      </div>
+      <div id="auditTable" class="data-table-wrap"></div>
+    </div>
+
+    <!-- ── ADMIN: SETTINGS ── -->
+    <div id="pageAdminSettings" class="content-page hidden">
+      <div class="cp-header">
+        <h1>Pengaturan Platform</h1>
+      </div>
+      <div class="settings-grid">
+
+        <div class="settings-section">
+          <h3>⚙ Umum</h3>
+          <div class="setting-item">
+            <div class="si-info"><label>Nama Platform</label><p>Nama yang tampil di seluruh website</p></div>
+            <input type="text" id="settingAppName" placeholder="Recruiter" class="setting-input" />
+          </div>
+          <div class="setting-item">
+            <div class="si-info"><label>Registrasi Terbuka</label><p>Jika dimatikan, tidak ada yang bisa daftar walau punya kode</p></div>
+            <label class="toggle"><input type="checkbox" id="settingRegOpen" checked /><span class="tg-slider"></span></label>
+          </div>
+          <div class="setting-item">
+            <div class="si-info"><label>Maintenance Mode</label><p>User biasa tidak bisa login, hanya admin</p></div>
+            <label class="toggle"><input type="checkbox" id="settingMaintenance" /><span class="tg-slider"></span></label>
+          </div>
+          <div class="setting-item">
+            <div class="si-info"><label>Mode Multi-Server</label><p>Aktifkan dukungan lebih dari satu server Discord</p></div>
+            <label class="toggle"><input type="checkbox" id="settingMultiServer" checked /><span class="tg-slider"></span></label>
+          </div>
+          <button class="btn-primary sm" onclick="saveGeneralSettings()">Simpan Pengaturan Umum</button>
+        </div>
+
+        <div class="settings-section">
+          <h3>🔑 Invite & Akses</h3>
+          <div class="setting-item">
+            <div class="si-info"><label>Wajib Kode Undangan</label><p>Registrasi hanya untuk yang punya kode</p></div>
+            <label class="toggle"><input type="checkbox" id="settingInviteRequired" checked /><span class="tg-slider"></span></label>
+          </div>
+          <div class="setting-item">
+            <div class="si-info"><label>Masa Berlaku Kode Default</label><p>Hari (0 = tidak kadaluarsa)</p></div>
+            <input type="number" id="settingInviteExpiry" value="30" min="0" max="365" class="setting-input sm" />
+          </div>
+          <div class="setting-item">
+            <div class="si-info"><label>Max Penggunaan Kode Default</label><p>Berapa kali 1 kode bisa dipakai (0 = unlimited)</p></div>
+            <input type="number" id="settingInviteMaxUse" value="1" min="0" max="100" class="setting-input sm" />
+          </div>
+          <div class="setting-item">
+            <div class="si-info"><label>Auto-Approve Registrasi</label><p>Langsung aktif tanpa perlu approval admin</p></div>
+            <label class="toggle"><input type="checkbox" id="settingAutoApprove" checked /><span class="tg-slider"></span></label>
+          </div>
+          <button class="btn-primary sm" onclick="saveInviteSettings()">Simpan Pengaturan Invite</button>
+        </div>
+
+        <div class="settings-section">
+          <h3>📋 Rekrutmen</h3>
+          <div class="setting-item">
+            <div class="si-info"><label>Max Lamaran per Rekrutmen</label><p>Lamaran otomatis ditutup jika sudah penuh</p></div>
+            <input type="number" id="settingMaxApps" value="100" min="1" max="10000" class="setting-input sm" />
+          </div>
+          <div class="setting-item">
+            <div class="si-info"><label>Durasi Default Rekrutmen</label><p>Hari sebelum otomatis ditutup (0 = manual)</p></div>
+            <input type="number" id="settingRecDuration" value="14" min="0" max="365" class="setting-input sm" />
+          </div>
+          <div class="setting-item">
+            <div class="si-info"><label>Boleh Lamar Lebih dari 1 Rekrutmen</label><p>User bisa submit ke beberapa rekrutmen sekaligus</p></div>
+            <label class="toggle"><input type="checkbox" id="settingMultiApply" checked /><span class="tg-slider"></span></label>
+          </div>
+          <div class="setting-item">
+            <div class="si-info"><label>Sembunyikan Jumlah Pelamar</label><p>Pelamar tidak bisa lihat berapa orang yang sudah apply</p></div>
+            <label class="toggle"><input type="checkbox" id="settingHideCount" /><span class="tg-slider"></span></label>
+          </div>
+          <div class="setting-item">
+            <div class="si-info"><label>Wajib Review Sebelum Publish</label><p>Rekrutmen baru harus disetujui super admin dulu</p></div>
+            <label class="toggle"><input type="checkbox" id="settingRecReview" /><span class="tg-slider"></span></label>
+          </div>
+          <button class="btn-primary sm" onclick="saveRecruitmentSettings()">Simpan Pengaturan Rekrutmen</button>
+        </div>
+
+        <div class="settings-section">
+          <h3>🏷 Tipe Rekrutmen</h3>
+          <p class="settings-desc">Kelola tipe-tipe rekrutmen yang tersedia saat membuat rekrutmen baru.</p>
+          <div id="recTypeList" class="tag-list"></div>
+          <div class="add-tag-row">
+            <input type="text" id="newRecTypeInput" placeholder="Nama tipe baru..." class="setting-input" />
+            <input type="color" id="newRecTypeColor" value="#C9A84C" class="color-input" />
+            <button class="btn-primary sm" onclick="addRecType()">Tambah</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>🏢 Departemen / Divisi</h3>
+          <p class="settings-desc">Divisi atau departemen yang bisa dipilih saat membuat rekrutmen.</p>
+          <div id="deptList" class="tag-list"></div>
+          <div class="add-tag-row">
+            <input type="text" id="newDeptInput" placeholder="Nama divisi..." class="setting-input" />
+            <button class="btn-primary sm" onclick="addDept()">Tambah</button>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <h3>🔔 Notifikasi</h3>
+          <div class="setting-item">
+            <div class="si-info"><label>Notifikasi Lamaran Masuk</label><p>Admin mendapat notifikasi tiap ada lamaran baru</p></div>
+            <label class="toggle"><input type="checkbox" id="settingNotifApp" checked /><span class="tg-slider"></span></label>
+          </div>
+          <div class="setting-item">
+            <div class="si-info"><label>Notifikasi User Baru</label><p>Admin mendapat notifikasi saat ada registrasi baru</p></div>
+            <label class="toggle"><input type="checkbox" id="settingNotifUser" checked /><span class="tg-slider"></span></label>
+          </div>
+          <div class="setting-item">
+            <div class="si-info"><label>Notifikasi Status Lamaran ke Pelamar</label><p>Pelamar diberitahu saat status lamarannya berubah</p></div>
+            <label class="toggle"><input type="checkbox" id="settingNotifStatus" checked /><span class="tg-slider"></span></label>
+          </div>
+          <button class="btn-primary sm" onclick="saveNotifSettings()">Simpan Pengaturan Notifikasi</button>
+        </div>
+
+        <div class="settings-section danger-section">
+          <h3>⚠ Zona Berbahaya</h3>
+          <div class="danger-actions">
+            <div class="danger-item">
+              <div class="si-info"><label>Reset Semua Notifikasi</label><p>Hapus semua notifikasi dari database</p></div>
+              <button class="btn-danger sm" onclick="confirmDangerAction('resetNotifs')">Reset</button>
+            </div>
+            <div class="danger-item">
+              <div class="si-info"><label>Arsipkan Semua Rekrutmen Closed</label><p>Pindahkan semua rekrutmen yang sudah closed ke arsip</p></div>
+              <button class="btn-danger sm" onclick="confirmDangerAction('archiveRec')">Arsipkan</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ══════════════════════════════════════════
+     MODALS
+══════════════════════════════════════════ -->
+
+<!-- Modal: Detail Rekrutmen (User) -->
+<div id="modalRecDetail" class="modal hidden">
+  <div class="modal-box large">
+    <div class="modal-header">
+      <h2 id="mrdTitle">—</h2>
+      <button class="modal-close" onclick="closeModal('modalRecDetail')">✕</button>
+    </div>
+    <div class="modal-body" id="mrdBody"><!-- filled --></div>
+    <div class="modal-footer" id="mrdFooter"><!-- filled --></div>
+  </div>
+</div>
+
+<!-- Modal: Apply Form -->
+<div id="modalApply" class="modal hidden">
+  <div class="modal-box large">
+    <div class="modal-header">
+      <h2>Apply: <span id="maTitle">—</span></h2>
+      <button class="modal-close" onclick="closeModal('modalApply')">✕</button>
+    </div>
+    <div class="modal-body" id="maBody"><!-- filled dynamically --></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalApply')">Batal</button>
+      <button class="btn-primary" onclick="submitApplication()">KIRIM LAMARAN →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Host Recruitment (FULL BUILDER) -->
+<div id="modalHostRec" class="modal hidden">
+  <div class="modal-box xlarge">
+    <div class="modal-header">
+      <h2>Host Rekrutmen Baru</h2>
+      <button class="modal-close" onclick="closeModal('modalHostRec')">✕</button>
+    </div>
+    <div class="modal-body">
+      <!-- Step indicator -->
+      <div class="step-indicator" id="hostStepIndicator">
+        <div class="step-item active" data-step="1"><span>1</span> Informasi Dasar</div>
+        <div class="step-item" data-step="2"><span>2</span> Detail & Syarat</div>
+        <div class="step-item" data-step="3"><span>3</span> Form Pertanyaan</div>
+        <div class="step-item" data-step="4"><span>4</span> Pengaturan</div>
+        <div class="step-item" data-step="5"><span>5</span> Review & Publish</div>
+      </div>
+
+      <!-- Step 1: Info Dasar -->
+      <div id="hostStep1" class="host-step">
+        <h3 class="step-title">Informasi Dasar Rekrutmen</h3>
+        <div class="form-grid-2">
+          <div class="fg-field full">
+            <label>JUDUL REKRUTMEN <span class="req">*</span></label>
+            <input type="text" id="hTitle" placeholder="Contoh: Rekrutmen Staff Moderasi — Musim IV" maxlength="120" />
+            <small>Maks. 120 karakter. Deskriptif dan spesifik.</small>
+          </div>
+          <div class="fg-field">
+            <label>SERVER DISCORD <span class="req">*</span></label>
+            <select id="hServer"><option value="">-- Pilih Server --</option></select>
+          </div>
+          <div class="fg-field">
+            <label>DIVISI / DEPARTEMEN <span class="req">*</span></label>
+            <select id="hDept"><option value="">-- Pilih Divisi --</option></select>
+          </div>
+          <div class="fg-field">
+            <label>TIPE REKRUTMEN <span class="req">*</span></label>
+            <select id="hType"><option value="">-- Pilih Tipe --</option></select>
+          </div>
+          <div class="fg-field">
+            <label>POSISI YANG DICARI <span class="req">*</span></label>
+            <input type="text" id="hPosition" placeholder="Contoh: Senior Moderator, Event Staff" />
+          </div>
+          <div class="fg-field full">
+            <label>DESKRIPSI UMUM <span class="req">*</span></label>
+            <textarea id="hDesc" rows="5" placeholder="Jelaskan rekrutmen ini secara umum. Apa yang dicari, untuk apa, dll."></textarea>
+          </div>
+          <div class="fg-field full">
+            <label>TANGGUNG JAWAB / JOBDESC <span class="req">*</span></label>
+            <textarea id="hJobdesc" rows="5" placeholder="Tuliskan apa saja yang akan dilakukan oleh yang diterima..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2: Detail & Syarat -->
+      <div id="hostStep2" class="host-step hidden">
+        <h3 class="step-title">Detail & Persyaratan</h3>
+        <div class="form-grid-2">
+          <div class="fg-field full">
+            <label>SYARAT WAJIB <span class="req">*</span></label>
+            <div id="reqList" class="dynamic-list"></div>
+            <div class="add-dynamic-row">
+              <input type="text" id="reqInput" placeholder="Contoh: Minimal aktif 3 jam/hari" />
+              <button class="btn-ghost sm" onclick="addRequirement()">+ Tambah</button>
+            </div>
+            <small>Minimal 3 syarat wajib.</small>
+          </div>
+          <div class="fg-field full">
+            <label>SYARAT DIUTAMAKAN (Optional)</label>
+            <div id="prefList" class="dynamic-list"></div>
+            <div class="add-dynamic-row">
+              <input type="text" id="prefInput" placeholder="Contoh: Pengalaman staff di server lain" />
+              <button class="btn-ghost sm" onclick="addPreference()">+ Tambah</button>
+            </div>
+          </div>
+          <div class="fg-field full">
+            <label>KEUNTUNGAN / BENEFIT</label>
+            <div id="benefitList" class="dynamic-list"></div>
+            <div class="add-dynamic-row">
+              <input type="text" id="benefitInput" placeholder="Contoh: Akses channel khusus staff" />
+              <button class="btn-ghost sm" onclick="addBenefit()">+ Tambah</button>
+            </div>
+          </div>
+          <div class="fg-field">
+            <label>JUMLAH POSISI TERSEDIA</label>
+            <input type="number" id="hSlots" placeholder="0 = unlimited" min="0" max="9999" />
+          </div>
+          <div class="fg-field">
+            <label>BATAS USIA (OPSIONAL)</label>
+            <div class="range-row">
+              <input type="number" id="hAgeMin" placeholder="Min (0=bebas)" min="0" max="100" />
+              <span>—</span>
+              <input type="number" id="hAgeMax" placeholder="Max (0=bebas)" min="0" max="100" />
+            </div>
+          </div>
+          <div class="fg-field full">
+            <label>CATATAN PENTING / DISCLAIMER (OPSIONAL)</label>
+            <textarea id="hDisclaimer" rows="3" placeholder="Informasi penting yang harus diketahui pelamar sebelum apply..."></textarea>
+          </div>
+          <div class="fg-field full">
+            <label>TAG / LABEL (Opsional)</label>
+            <div id="hTagList" class="dynamic-list inline"></div>
+            <div class="add-dynamic-row">
+              <input type="text" id="hTagInput" placeholder="Contoh: urgent, discord, komunitas" />
+              <button class="btn-ghost sm" onclick="addHostTag()">+ Tambah Tag</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3: Form Questions -->
+      <div id="hostStep3" class="host-step hidden">
+        <h3 class="step-title">Pertanyaan Form Lamaran</h3>
+        <p class="step-desc">Susun pertanyaan yang harus dijawab oleh pelamar. Data dasar (username, Discord) sudah otomatis dikumpulkan.</p>
+
+        <!-- Pertanyaan default yang otomatis ada -->
+        <div class="default-fields-info">
+          <span>✦ Data Otomatis Terkumpul:</span>
+          <span class="df-tag">Username Platform</span>
+          <span class="df-tag">Display Name</span>
+          <span class="df-tag">Discord Tag</span>
+          <span class="df-tag">Tanggal Daftar</span>
+        </div>
+
+        <div id="questionBuilder" class="question-builder">
+          <!-- questions added here -->
+        </div>
+
+        <div class="add-question-bar">
+          <span>Tambah Pertanyaan:</span>
+          <button class="btn-ghost sm" onclick="addQuestion('text')">Teks Singkat</button>
+          <button class="btn-ghost sm" onclick="addQuestion('textarea')">Paragraf</button>
+          <button class="btn-ghost sm" onclick="addQuestion('radio')">Pilihan Ganda</button>
+          <button class="btn-ghost sm" onclick="addQuestion('checkbox')">Checkbox</button>
+          <button class="btn-ghost sm" onclick="addQuestion('number')">Angka</button>
+          <button class="btn-ghost sm" onclick="addQuestion('select')">Dropdown</button>
+          <button class="btn-ghost sm" onclick="addQuestion('scale')">Skala (1-10)</button>
+          <button class="btn-ghost sm" onclick="addQuestion('url')">URL / Link</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Pengaturan -->
+      <div id="hostStep4" class="host-step hidden">
+        <h3 class="step-title">Pengaturan Rekrutmen</h3>
+        <div class="form-grid-2">
+          <div class="fg-field">
+            <label>TANGGAL MULAI <span class="req">*</span></label>
+            <input type="datetime-local" id="hStartDate" />
+          </div>
+          <div class="fg-field">
+            <label>TANGGAL BERAKHIR <span class="req">*</span></label>
+            <input type="datetime-local" id="hEndDate" />
+          </div>
+          <div class="fg-field">
+            <label>MAX PELAMAR</label>
+            <input type="number" id="hMaxApplicants" placeholder="0 = unlimited" min="0" />
+          </div>
+          <div class="fg-field">
+            <label>PRIORITAS</label>
+            <select id="hPriority">
+              <option value="normal">Normal</option>
+              <option value="high">Tinggi</option>
+              <option value="urgent">Urgent</option>
+              <option value="critical">Critical</option>
+            </select>
+          </div>
+          <div class="fg-field">
+            <label>VISIBILITAS</label>
+            <select id="hVisibility">
+              <option value="public">Publik (semua user terdaftar)</option>
+              <option value="private">Private (undangan khusus)</option>
+            </select>
+          </div>
+          <div class="fg-field">
+            <label>STATUS AWAL</label>
+            <select id="hInitStatus">
+              <option value="draft">Draft (belum publish)</option>
+              <option value="open">Langsung Open</option>
+            </select>
+          </div>
+          <div class="fg-field full">
+            <label>LINK PENGUMUMAN (OPSIONAL)</label>
+            <input type="url" id="hAnnounceLink" placeholder="https://discord.com/channels/..." />
+            <small>Link ke channel Discord untuk pengumuman rekrutmen ini</small>
+          </div>
+          <div class="fg-field full">
+            <label>CONTACT PERSON (OPSIONAL)</label>
+            <input type="text" id="hContactPerson" placeholder="Discord tag admin yang bisa dihubungi" />
+          </div>
+          <div class="fg-field full settings-toggles">
+            <label>OPSI TAMBAHAN</label>
+            <div class="toggle-group">
+              <label class="toggle-label"><input type="checkbox" id="hAllowWithdraw" checked /> Pelamar boleh menarik lamaran</label>
+              <label class="toggle-label"><input type="checkbox" id="hShowApplicantCount" /> Tampilkan jumlah pelamar ke publik</label>
+              <label class="toggle-label"><input type="checkbox" id="hRequireConfirm" checked /> Pelamar wajib konfirmasi email</label>
+              <label class="toggle-label"><input type="checkbox" id="hAutoClose" checked /> Auto-tutup saat mencapai max pelamar</label>
+              <label class="toggle-label"><input type="checkbox" id="hAutoCloseDate" checked /> Auto-tutup saat tanggal berakhir</label>
+              <label class="toggle-label"><input type="checkbox" id="hSendAcceptNotif" checked /> Kirim notifikasi saat diterima/ditolak</label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5: Review -->
+      <div id="hostStep5" class="host-step hidden">
+        <h3 class="step-title">Review & Publish</h3>
+        <p class="step-desc">Periksa kembali semua informasi sebelum mempublish rekrutmen ini.</p>
+        <div id="hostReviewContent" class="review-content">
+          <!-- filled by JS -->
+        </div>
+        <div class="final-confirm">
+          <div class="fc-warning">
+            <span>⚠</span>
+            <p>Setelah dipublish, beberapa informasi tidak bisa diubah. Pastikan semua sudah benar.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Footer with navigation -->
+    <div class="modal-footer step-footer">
+      <button class="btn-ghost" id="hostPrevBtn" onclick="hostStepPrev()" style="display:none">← Sebelumnya</button>
+      <div class="step-dots" id="hostStepDots"></div>
+      <button class="btn-primary" id="hostNextBtn" onclick="hostStepNext()">Selanjutnya →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Application Detail (Admin) -->
+<div id="modalAppDetail" class="modal hidden">
+  <div class="modal-box large">
+    <div class="modal-header">
+      <h2>Detail Lamaran</h2>
+      <button class="modal-close" onclick="closeModal('modalAppDetail')">✕</button>
+    </div>
+    <div class="modal-body" id="madBody"><!-- filled --></div>
+    <div class="modal-footer" id="madFooter"><!-- filled --></div>
+  </div>
+</div>
+
+<!-- Modal: User Detail (Admin) -->
+<div id="modalUserDetail" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>Detail User</h2>
+      <button class="modal-close" onclick="closeModal('modalUserDetail')">✕</button>
+    </div>
+    <div class="modal-body" id="mudBody"><!-- filled --></div>
+    <div class="modal-footer" id="mudFooter"><!-- filled --></div>
+  </div>
+</div>
+
+<!-- Modal: Generate Invite -->
+<div id="modalGenerateInvite" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>Generate Kode Undangan</h2>
+      <button class="modal-close" onclick="closeModal('modalGenerateInvite')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg-field">
+        <label>JUMLAH KODE</label>
+        <input type="number" id="giCount" value="1" min="1" max="50" />
+      </div>
+      <div class="fg-field">
+        <label>MAX PENGGUNAAN PER KODE</label>
+        <input type="number" id="giMaxUse" value="1" min="0" max="100" />
+        <small>0 = unlimited</small>
+      </div>
+      <div class="fg-field">
+        <label>KADALUARSA (HARI)</label>
+        <input type="number" id="giExpiry" value="30" min="0" max="365" />
+        <small>0 = tidak pernah kadaluarsa</small>
+      </div>
+      <div class="fg-field">
+        <label>CATATAN (OPSIONAL)</label>
+        <input type="text" id="giNote" placeholder="Untuk siapa / acara apa..." />
+      </div>
+      <div class="fg-field">
+        <label>ROLE DEFAULT UNTUK USER BARU</label>
+        <select id="giRole"><option value="">Role Default</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalGenerateInvite')">Batal</button>
+      <button class="btn-primary" onclick="generateInviteCodes()">GENERATE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Create Role -->
+<div id="modalCreateRole" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="roleModalTitle">Buat Role Baru</h2>
+      <button class="modal-close" onclick="closeModal('modalCreateRole')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg-field">
+        <label>NAMA ROLE <span class="req">*</span></label>
+        <input type="text" id="roleName" placeholder="Contoh: Senior Staff, Moderator" />
+      </div>
+      <div class="fg-field">
+        <label>WARNA ROLE</label>
+        <div class="color-preview-row">
+          <input type="color" id="roleColor" value="#C9A84C" />
+          <span id="roleColorPreview" class="role-color-preview">PREVIEW ROLE</span>
+        </div>
+      </div>
+      <div class="fg-field">
+        <label>DESKRIPSI</label>
+        <textarea id="roleDesc" rows="3" placeholder="Deskripsi role ini..."></textarea>
+      </div>
+      <div class="fg-field">
+        <label>LEVEL (Hierarki)</label>
+        <input type="number" id="roleLevel" value="1" min="0" max="100" />
+        <small>Lebih tinggi = lebih banyak akses. Admin = 90+</small>
+      </div>
+      <div class="fg-field">
+        <label>PERMISSION</label>
+        <div class="perm-grid">
+          <label class="perm-item"><input type="checkbox" id="permManageRec" /> Kelola Rekrutmen</label>
+          <label class="perm-item"><input type="checkbox" id="permManageUsers" /> Kelola User</label>
+          <label class="perm-item"><input type="checkbox" id="permManageInvites" /> Kelola Invite</label>
+          <label class="perm-item"><input type="checkbox" id="permViewAnalytics" /> Lihat Analytics</label>
+          <label class="perm-item"><input type="checkbox" id="permManageRoles" /> Kelola Role</label>
+          <label class="perm-item"><input type="checkbox" id="permManageSettings" /> Kelola Settings</label>
+          <label class="perm-item"><input type="checkbox" id="permReviewApps" /> Review Lamaran</label>
+          <label class="perm-item"><input type="checkbox" id="permViewAuditLog" /> Lihat Audit Log</label>
+        </div>
+      </div>
+      <input type="hidden" id="roleEditId" value="" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalCreateRole')">Batal</button>
+      <button class="btn-primary" onclick="saveRole()">SIMPAN ROLE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add Server -->
+<div id="modalAddServer" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2 id="serverModalTitle">Tambah Server Discord</h2>
+      <button class="modal-close" onclick="closeModal('modalAddServer')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg-field">
+        <label>NAMA SERVER <span class="req">*</span></label>
+        <input type="text" id="serverName" placeholder="Nama server Discord" />
+      </div>
+      <div class="fg-field">
+        <label>SERVER ID (OPSIONAL)</label>
+        <input type="text" id="serverId" placeholder="ID numerik Discord server" />
+      </div>
+      <div class="fg-field">
+        <label>INVITE LINK</label>
+        <input type="url" id="serverInvite" placeholder="https://discord.gg/..." />
+      </div>
+      <div class="fg-field">
+        <label>DESKRIPSI SINGKAT</label>
+        <textarea id="serverDesc" rows="3" placeholder="Tentang server ini..."></textarea>
+      </div>
+      <div class="fg-field">
+        <label>WARNA TEMA SERVER</label>
+        <input type="color" id="serverColor" value="#5865F2" />
+      </div>
+      <div class="fg-field">
+        <label>STATUS</label>
+        <select id="serverStatus">
+          <option value="active">Aktif</option>
+          <option value="inactive">Tidak Aktif</option>
+        </select>
+      </div>
+      <input type="hidden" id="serverEditId" value="" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalAddServer')">Batal</button>
+      <button class="btn-primary" onclick="saveServer()">SIMPAN SERVER</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Create GC -->
+<div id="modalCreateGC" class="modal hidden">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>Buat Group Chat Baru</h2>
+      <button class="modal-close" onclick="closeModal('modalCreateGC')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="fg-field">
+        <label>NAMA GROUP CHAT <span class="req">*</span></label>
+        <input type="text" id="gcName" placeholder="Contoh: GC Rekrutmen Batch V" />
+      </div>
+      <div class="fg-field">
+        <label>TERKAIT REKRUTMEN (OPSIONAL)</label>
+        <select id="gcRelatedRec"><option value="">-- Tidak terkait --</option></select>
+      </div>
+      <div class="fg-field">
+        <label>DESKRIPSI</label>
+        <textarea id="gcDesc" rows="2" placeholder="Deskripsi GC ini..."></textarea>
+      </div>
+      <div class="fg-field">
+        <label>ANGGOTA (tambahkan lewat username)</label>
+        <div id="gcMemberList" class="dynamic-list"></div>
+        <div class="add-dynamic-row">
+          <input type="text" id="gcMemberInput" placeholder="Username..." />
+          <button class="btn-ghost sm" onclick="addGCMember()">+ Tambah</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalCreateGC')">Batal</button>
+      <button class="btn-primary" onclick="createGC()">BUAT GC</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Confirm Action -->
+<div id="modalConfirm" class="modal hidden">
+  <div class="modal-box small">
+    <div class="modal-header">
+      <h2 id="confirmTitle">Konfirmasi</h2>
+      <button class="modal-close" onclick="closeModal('modalConfirm')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p id="confirmMessage">Apakah Anda yakin?</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalConfirm')">Batal</button>
+      <button class="btn-danger" id="confirmActionBtn">YA, LANJUTKAN</button>
+    </div>
+  </div>
+</div>
+
+<script src="firebase-config.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
