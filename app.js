@@ -7,7 +7,7 @@ class RecruitmentSystem {
         
         this.init();
     }
-
+ 
     init() {
         this.bindEvents();
         this.renderPublic();
