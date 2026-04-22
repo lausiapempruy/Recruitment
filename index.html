@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recruitment System - Elite Team</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Particles -->
+    <canvas id="particles"></canvas>
+    
+    <!-- Loading Screen -->
+    <div id="loader" class="loader">
+        <div class="loader-content">
+            <div class="loader-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <h2>Loading Elite System...</h2>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔐 Admin Access</h3>
+                <button class="close-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <input type="password" id="adminPass" placeholder="Masukkan Password Admin">
+                <button id="loginBtn" class="btn btn-primary">Masuk Dashboard</button>
+                <div class="demo-info">
+                    <small>Demo: <strong>admin123</strong></small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-shield-alt"></i>
+                <h3>Elite<span>Recruit</span></h3>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#home" class="nav-link active">Home</a></li>
+                <li><a href="#recruitments" class="nav-link">Recruitments</a></li>
+                <li><a href="#about" class="nav-link">About</a></li>
+                <li id="adminBtn" class="nav-link admin-only" style="display:none;">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </li>
+                <li id="logoutBtn" class="nav-link" style="display:none;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main App -->
+    <div id="app">
+        <!-- Public Mode -->
+        <div id="publicMode">
+            <!-- Hero -->
+            <section id="home" class="hero">
+                <div class="hero-content">
+                    <div class="hero-text">
+                        <h1 class="hero-title">
+                            <span>Join</span> <span class="gradient-text">Elite</span><br>
+                            <span>Team</span>
+                        </h1>
+                        <p class="hero-subtitle">
+                            Lowongan terbaik untuk developer berbakat. 
+                            <span id="recruitmentCount">0</span> recruitment tersedia.
+                        </p>
+                        <div class="hero-buttons">
+                            <a href="#recruitments" class="btn btn-primary">Lihat Lowongan</a>
+                            <button id="adminAccessBtn" class="btn btn-secondary">
+                                <i class="fas fa-cog"></i> Admin Panel
+                            </button>
+                        </div>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat-card">
+                            <h3 id="totalApps">0</h3>
+                            <span>Total Applications</span>
+                        </div>
+                        <div class="stat-card">
+                            <h3 id="activeRec">0</h3>
+                            <span>Active Recruitments</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recruitments -->
+            <section id="recruitments" class="recruitments">
+                <div class="container">
+                    <h2 class="section-title">Available Positions</h2>
+                    <div id="recruitmentList" class="recruitment-grid">
+                        <div class="empty-state">
+                            <i class="fas fa-briefcase"></i>
+                            <h3>Belum ada recruitment aktif</h3>
+                            <p>Stay tuned untuk lowongan terbaru!</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- About -->
+            <section id="about" class="about">
+                <div class="container">
+                    <h2 class="section-title">Why Join Us?</h2>
+                    <div class="about-grid">
+                        <div class="about-card">
+                            <i class="fas fa-rocket"></i>
+                            <h3>Fast Growth</h3>
+                            <p>Karir lightning fast dengan project-project keren</p>
+                        </div>
+                        <div class="about-card">
+                            <i class="fas fa-users"></i>
+                            <h3>Elite Team</h3>
+                            <p>Bekerja sama developer terbaik di Indonesia</p>
+                        </div>
+                        <div class="about-card">
+                            <i class="fas fa-award"></i>
+                            <h3>Competitive Salary</h3>
+                            <p>Gaji kompetitif + bonus performance</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div id="adminMode" class="admin-mode" style="display:none;">
+            <!-- Dashboard Header -->
+            <header class="dashboard-header">
+                <div class="container">
+                    <h1><i class="fas fa-tachometer-alt"></i> Admin Dashboard</h1>
+                    <div class="dashboard-stats">
+                        <div class="stat">
+                            <h3 id="adminTotalRec">0</h3>
+                            <span>Total Recruitments</span>
+                        </div>
+                        <div class="stat">
+                            <h3 id="adminActiveRec">0</h3>
+                            <span>Active</span>
+                        </div>
+                        <div class="stat">
+                            <h3 id="adminTotalApps">0</h3>
+                            <span>All Applications</span>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <!-- Create Recruitment -->
+                <section class="dashboard-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-plus-circle"></i> Create New Recruitment</h2>
+                        <button class="btn btn-primary" id="createRecBtn">
+                            <i class="fas fa-plus"></i> New Recruitment
+                        </button>
+                    </div>
+                    <div id="createForm" class="form-container" style="display:none;">
+                        <form id="recruitmentForm">
+                            <div class="form-group">
+                                <label>Position Name</label>
+                                <input type="text" id="posName" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Recruitment Type</label>
+                                <select id="recType" required>
+                                    <option value="">Pilih Tipe</option>
+                                    <option value="frontend">Frontend Developer</option>
+                                    <option value="backend">Backend Developer</option>
+                                    <option value="fullstack">Fullstack Developer</option>
+                                    <option value="uiux">UI/UX Designer</option>
+                                    <option value="mobile">Mobile Developer</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Description</label>
+                                <textarea id="description" rows="4" required></textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Start Date</label>
+                                    <input type="date" id="startDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>End Date</label>
+                                    <input type="date" id="endDate" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Max Applicants</label>
+                                    <input type="number" id="maxApps" min="1" max="100" value="50">
+                                </div>
+                                <div class="form-group">
+                                    <label>Difficulty</label>
+                                    <select id="difficulty">
+                                        <option value="easy">Easy</option>
+                                        <option value="medium" selected>Medium</option>
+                                        <option value="hard">Hard</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Create Recruitment</button>
+                                <button type="button" class="btn btn-secondary" id="cancelCreate">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Active Recruitments -->
+                <section class="dashboard-section">
+                    <h2><i class="fas fa-list"></i> Active Recruitments</h2>
+                    <div id="adminRecruitmentList" class="recruitment-grid"></div>
+                </section>
+
+                <!-- Applications -->
+                <section class="dashboard-section">
+                    <h2><i class="fas fa-file-alt"></i> All Applications</h2>
+                    <div class="tabs">
+                        <button class="tab-btn active" data-tab="pending">Pending <span id="pendingCount">0</span></button>
+                        <button class="tab-btn" data-tab="approved">Approved <span id="approvedCount">0</span></button>
+                        <button class="tab-btn" data-tab="rejected">Rejected <span id="rejectedCount">0</span></button>
+                    </div>
+                    <div id="applicationsList" class="applications-grid"></div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recruitment Modal (Public) -->
+    <div id="recModal" class="modal">
+        <div class="modal-content large">
+            <div class="modal-header">
+                <h3 id="modalTitle"></h3>
+                <button class="close-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div id="recDetails"></div>
+                <form id="applyForm" class="apply-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <input type="text" id="appName" placeholder="Full Name" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" id="appEmail" placeholder="Email" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <input type="tel" id="appPhone" placeholder="Phone">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="appDiscord" placeholder="Discord ID">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <textarea id="appWhy" placeholder="Why do you want to join us?" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <textarea id="appExp" placeholder="Your experiences & skills" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label>
+                            <input type="checkbox" id="agreeTerms" required>
+                            Saya setuju dengan syarat & ketentuan
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="submitApp">
+                        <span>Submit Application</span>
+                        <div class="loader-sm" style="display:none;"></div>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
